@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cinema Analytics | Full Case</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #0f0f13;
+            --card-bg: #1a1a24;
+            --accent-gold: #FFD700;
+            --accent-neon: #b026ff;
+            --accent-red: #ff2a6d;
+            --accent-blue: #00f2ff;
+            --accent-green: #00ff9d;
+            --accent-orange: #ff9100;
+            --text-main: #ffffff;
+            --text-secondary: #b3b3b3;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 { font-weight: 900; text-transform: uppercase; margin: 0; }
+        
+        .highlight-gold { color: var(--accent-gold); text-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+        .highlight-neon { color: var(--accent-neon); text-shadow: 0 0 15px rgba(176, 38, 255, 0.4); }
+        .highlight-red { color: var(--accent-red); text-shadow: 0 0 15px rgba(255, 42, 109, 0.4); }
+        .highlight-green { color: var(--accent-green); text-shadow: 0 0 15px rgba(0, 255, 157, 0.4); }
+        .highlight-orange { color: var(--accent-orange); text-shadow: 0 0 15px rgba(255, 145, 0, 0.4); }
+
+        /* --- Hero Section --- */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, rgba(26,26,36,0.85) 0%, rgba(15,15,19,1) 100%), url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover;
+            background-position: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .hero h1 { font-size: 4rem; line-height: 1.1; margin-bottom: 20px; letter-spacing: -2px; }
+        .hero p { font-size: 1.2rem; color: var(--text-secondary); max-width: 600px; margin-bottom: 30px;}
+
+        /* --- Layout --- */
+        .container { max-width: 1200px; margin: 0 auto; padding: 80px 20px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+        
+        .section-header { text-align: center; margin-bottom: 60px; }
+        .section-header h2 { font-size: 2.5rem; margin-bottom: 10px; }
+
+        /* --- Cards --- */
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1); }
+
+        /* --- Python/Code Badge --- */
+        .tech-badge {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 50px;
+            font-family: 'Roboto Mono', monospace; font-size: 0.9rem; margin: 5px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .code-block {
+            background: #0d0d10;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.85rem;
+            color: #00ff9d;
+            border-left: 4px solid var(--accent-neon);
+            overflow-x: auto;
+            white-space: pre;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            margin-top: 15px;
+        }
+
+        /* --- Posters --- */
+        .poster-grid { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px; scroll-behavior: smooth; }
+        .poster-card {
+            min-width: 220px; border-radius: 15px; overflow: hidden; position: relative; transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .poster-card:hover { transform: scale(1.05); z-index: 2; }
+        .poster-card img { width: 100%; height: 330px; object-fit: cover; }
+        .poster-info {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(to top, black 20%, transparent);
+            padding: 40px 15px 15px; text-align: center;
+        }
+        
+        .vote-badge {
+            position: absolute; top: 10px; right: 10px;
+            background: var(--accent-orange); color: black;
+            font-weight: bold; padding: 5px 10px; border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255, 145, 0, 0.6);
+        }
+
+        /* --- Custom Bars --- */
+        .bar-row { margin-bottom: 15px; }
+        .bar-labels { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
+        .bar-track { background: rgba(255,255,255,0.1); height: 12px; border-radius: 6px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 6px; width: 0; transition: width 1.5s ease-out; }
+        
+        /* --- Chart --- */
+        .chart-container { position: relative; height: 350px; width: 100%; }
+
+        /* --- Footer --- */
+        footer { background: #000; padding: 60px 20px; text-align: center; margin-top: 50px; border-top: 1px solid #333; }
+        
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <section class="hero">
+        <div data-aos="fade-up">
+            <i class="fas fa-film fa-3x highlight-gold" style="margin-bottom: 20px;"></i>
+            <h1>Data <span class="highlight-gold">Cinema</span></h1>
+            <p>Я проанализировала 45,000 фильмов: от JSON-каши до бизнес-инсайтов.</p>
+            
+            <div style="margin-top: 20px;">
+                <span class="tech-badge"><i class="fab fa-python highlight-green"></i> Python</span>
+                <span class="tech-badge"><i class="fas fa-database highlight-blue"></i> SQL</span>
+                <span class="tech-badge"><i class="fas fa-chart-pie highlight-red"></i> Pandas</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="container" style="background: rgba(255,255,255,0.02); border-radius: 30px; margin-bottom: 80px;">
+        <div class="grid-2">
+            <div data-aos="fade-right">
+                <h2>🐍 <span class="highlight-green">Python</span> Clean-Up</h2>
+                <p style="margin: 20px 0; line-height: 1.6;">
+                    Исходные данные (жанры, студии) пришли в формате сложного JSON внутри CSV.
+                    Excel бы просто сломался, поэтому я написала скрипт на Python.
+                </p>
+                <ul style="list-style: none; padding: 0; color: #ccc; margin-bottom: 20px;">
+                    <li><i class="fas fa-check highlight-green"></i> Библиотека <code>ast</code> для парсинга строк</li>
+                    <li><i class="fas fa-check highlight-green"></i> Извлечение названий из словарей</li>
+                    <li><i class="fas fa-check highlight-green"></i> Подготовка к экспорту в MySQL</li>
+                </ul>
+            </div>
+            <div data-aos="fade-left">
+                <div class="code-block">
+import pandas as pd
+import ast
+
+# Функция для вытаскивания имён из JSON-каши
+def extract_names(column_data):
+    try:
+        items = ast.literal_eval(column_data)
+        if isinstance(items, list):
+            # 'Action, Adventure'
+            return ', '.join([i['name'] for i in items])
+    except:
+        return None
+
+# Чистим сложные столбцы
+df['genres'] = df['genres'].apply(extract_names)
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container">
+        <div class="section-header" data-aos="fade-up">
+            <h2>🏆 Топ признанных шедевров</h2>
+            <p>Моя SQL-выборка: фильмы с рейтингом > 8.0 и более 1000 голосов.</p>
+        </div>
+
+        <div class="poster-grid" data-aos="fade-left">
+            <div class="poster-card">
+                <img src="https://m.media-amazon.com/images/M/MV5BMDFkYTc0MGEtZmNhMC00ZDIzLWFmNTEtODM1ZmRlYWMwMWFmXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_.jpg" alt="Shawshank">
+                <div class="poster-info">
+                    <strong>The Shawshank Redemption</strong>
+                    <div class="highlight-gold"><i class="fas fa-star"></i> 8.5</div>
+                </div>
+            </div>
+            <div class="poster-card">
+                <img src="https://m.media-amazon.com/images/M/MV5BM2MyNjYxNmUtYTAwNi00MTYxLWJmNWYtYzZlODY3ZTk3OTFlXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_.jpg" alt="Godfather">
+                <div class="poster-info">
+                    <strong>The Godfather</strong>
+                    <div class="highlight-gold"><i class="fas fa-star"></i> 8.5</div>
+                </div>
+            </div>
+             <div class="poster-card">
+                <img src="https://ir.ozone.ru/s3/multimedia-s/c1000/6386270596.jpg" alt="Your Name">
+                <div class="poster-info">
+                    <strong>Your Name (Japan)</strong>
+                    <div class="highlight-gold"><i class="fas fa-star"></i> 8.5</div>
+                </div>
+            </div>
+            <div class="poster-card">
+                <img src="https://avatars.mds.yandex.net/get-kinopoisk-image/1900788/6c61384e-41b6-4bc5-b5d7-856d75d99146/220x330" alt="Spirited Away">
+                <div class="poster-info">
+                    <strong>Spirited Away</strong>
+                    <div class="highlight-gold"><i class="fas fa-star"></i> 8.3</div>
+                </div>
+            </div>
+            <div class="poster-card">
+                <img src="https://m.media-amazon.com/images/M/MV5BNGNhMDIzZTUtNTBlZi00MTRlLWFjM2ItYzViMjE3YzI5MjljXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_.jpg" alt="Pulp Fiction">
+                <div class="poster-info">
+                    <strong>Pulp Fiction</strong>
+                    <div class="highlight-gold"><i class="fas fa-star"></i> 8.3</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container">
+        <div class="section-header" data-aos="fade-up">
+            <h2>🔥 HYPE BEASTS: Топ обсуждаемых</h2>
+            <p>Фильмы с самым большим количеством голосов (Vote Count).<br>Это то, о чем все говорили.</p>
+        </div>
+
+        <div class="poster-grid" data-aos="fade-right">
+            <div class="poster-card" style="border: 2px solid var(--accent-orange);">
+                <div class="vote-badge"><i class="fas fa-fire"></i> 14,075</div>
+                <img src="https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_.jpg" alt="Inception">
+                <div class="poster-info">
+                    <strong>Inception</strong>
+                    <div style="color: #aaa;">Sci-Fi / Action</div>
+                </div>
+            </div>
+            <div class="poster-card">
+                <div class="vote-badge"><i class="fas fa-comment-alt"></i> 12,269</div>
+                <img src="https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_.jpg" alt="Dark Knight">
+                <div class="poster-info">
+                    <strong>The Dark Knight</strong>
+                    <div style="color: #aaa;">Crime / Drama</div>
+                </div>
+            </div>
+            <div class="poster-card">
+                <div class="vote-badge"><i class="fas fa-comment-alt"></i> 12,114</div>
+                <img src="https://m.media-amazon.com/images/M/MV5BZDA0OGQxNTItMDZkMC00N2UyLTg3MzMtYTJmNjg3Nzk5MzRiXkEyXkFqcGdeQXVyMjUzOTY1NTc@._V1_.jpg" alt="Avatar">
+                <div class="poster-info">
+                    <strong>Avatar</strong>
+                    <div style="color: #aaa;">Sci-Fi / Fantasy</div>
+                </div>
+            </div>
+            <div class="poster-card">
+                <div class="vote-badge"><i class="fas fa-comment-alt"></i> 12,000</div>
+                <img src="https://avatars.mds.yandex.net/get-kinopoisk-image/1704946/323b064d-5ed3-4623-a0a4-d5f71af54e3d/3840x" alt="Avengers">
+                <div class="poster-info">
+                    <strong>The Avengers</strong>
+                    <div style="color: #aaa;">Action / Sci-Fi</div>
+                </div>
+            </div>
+             <div class="poster-card">
+                <div class="vote-badge"><i class="fas fa-comment-alt"></i> 11,444</div>
+                <img src="http://www.kinokadr.ru/filmzimg/d/deadpool/deadpool_poster1.jpg" alt="Deadpool">
+                <div class="poster-info">
+                    <strong>Deadpool</strong>
+                    <div style="color: #aaa;">Action / Comedy</div>
+                </div>
+            </div>
+        </div>
+
+   
+    </section>
+
+    <section class="container">
+        <div class="section-header" data-aos="fade-up">
+            <h2>🎭 Жанры: Любовь vs Деньги</h2>
+            <p>Я проанализировала жанры по двум метрикам: народная любовь (популярность) и реальная прибыль.</p>
+        </div>
+
+        <div class="grid-2">
+            <div class="card" data-aos="fade-right">
+                <h3><i class="fas fa-heart highlight-red"></i> Народная любовь</h3>
+                <p style="margin: 15px 0; color: #ccc;">Самые обсуждаемые жанры по количеству голосов (Total Votes).</p>
+
+                <ul style="list-style: none; padding: 0; margin-top: 25px;">
+                    <li style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 0;">
+                        <span><i class="fas fa-fire highlight-red"></i> 1. Action</span>
+                        <span style="font-weight: bold;">826k votes</span>
+                    </li>
+                    <li style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 0;">
+                        <span><i class="fas fa-theater-masks highlight-neon"></i> 2. Drama</span>
+                        <span style="font-weight: bold;">537k votes</span>
+                    </li>
+                    <li style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 0;">
+                        <span><i class="fas fa-hiking highlight-blue"></i> 3. Adventure</span>
+                        <span style="font-weight: bold;">530k votes</span>
+                    </li>
+                    <li style="display: flex; justify-content: space-between; padding: 12px 0;">
+                        <span><i class="fas fa-laugh-beam highlight-gold"></i> 4. Comedy</span>
+                        <span style="font-weight: bold;">363k votes</span>
+                    </li>
+                </ul>
+                <div class="code-block" style="font-size: 0.7rem;">
+-- Сортировка по популярности
+ORDER BY total_votes DESC
+                </div>
+            </div>
+
+            <div class="card" data-aos="fade-left">
+                <h3><i class="fas fa-sack-dollar highlight-green"></i> Реальная Прибыль</h3>
+                <p style="margin: 15px 0; color: #ccc;">Средняя прибыль (Revenue - Budget). Драма собирает лайки, а мультики — кассу.</p>
+
+                <ul style="list-style: none; padding: 0; margin-top: 25px;">
+                    <li style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 0;">
+                        <span><i class="fas fa-child highlight-green"></i> 1. Family</span>
+                        <span style="font-weight: bold;">$397.7 mln</span>
+                    </li>
+                    <li style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 0;">
+                        <span><i class="fas fa-magic highlight-neon"></i> 2. Animation</span>
+                        <span style="font-weight: bold;">$313.9 mln</span>
+                    </li>
+                    <li style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 0;">
+                        <span><i class="fas fa-hiking highlight-blue"></i> 3. Adventure</span>
+                        <span style="font-weight: bold;">$259.5 mln</span>
+                    </li>
+                    <li style="display: flex; justify-content: space-between; padding: 12px 0;">
+                        <span><i class="fas fa-rocket highlight-red"></i> 4. Sci-Fi</span>
+                        <span style="font-weight: bold;">$207.6 mln</span>
+                    </li>
+                </ul>
+                <div class="code-block" style="font-size: 0.7rem;">
+-- Сортировка по прибыли
+ORDER BY avg(revenue - budget) DESC
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container">
+        <div class="grid-2">
+            
+            <div class="card" data-aos="fade-right">
+                <h3><i class="fas fa-globe-asia highlight-blue"></i> Битва Стран</h3>
+                <p style="margin: 15px 0; color: #ccc;">Я сравнила средний рейтинг фильмов. Япония неожиданно обходит Голливуд!</p>
+                
+                <div style="margin-top: 30px;">
+                    <div class="bar-row">
+                        <div class="bar-labels">
+                            <span>🇯🇵 Japan (Anime & Drama)</span> <span class="highlight-gold">8.2 / 10</span>
+                        </div>
+                        <div class="bar-track"><div class="bar-fill" style="width: 82%; background: var(--accent-gold);"></div></div>
+                    </div>
+                    <div class="bar-row">
+                        <div class="bar-labels">
+                            <span>🇺🇸 USA (Hollywood)</span> <span>7.6 / 10</span>
+                        </div>
+                        <div class="bar-track"><div class="bar-fill" style="width: 76%; background: var(--accent-blue);"></div></div>
+                    </div>
+                    <div class="bar-row">
+                        <div class="bar-labels">
+                            <span>🇬🇧 United Kingdom</span> <span>7.4 / 10</span>
+                        </div>
+                        <div class="bar-track"><div class="bar-fill" style="width: 74%; background: var(--accent-red);"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" data-aos="zoom-in">
+                <h3><i class="fas fa-hourglass-half highlight-gold"></i> Золотые годы</h3>
+                <p style="font-size: 0.9rem; margin-bottom: 20px;">Мой запрос выявил годы с наивысшим средним рейтингом.</p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div style="background: #333; padding: 10px 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-weight: 900; font-size: 1.2rem; color: var(--accent-gold);">1980</div>
+                        <div style="font-size: 0.8rem;">7.7 Rating</div>
+                    </div>
+                    <div style="background: #333; padding: 10px 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-weight: 900; font-size: 1.2rem; color: var(--accent-gold);">1982</div>
+                        <div style="font-size: 0.8rem;">7.6 Rating</div>
+                    </div>
+                    <div style="background: #333; padding: 10px 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-weight: 900; font-size: 1.2rem; color: var(--accent-gold);">1994</div>
+                        <div style="font-size: 0.8rem;">7.4 Rating</div>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; font-size: 0.85rem; color: #888;">
+                    * 1994 год подарил нам "Побег из Шоушенка" и "Криминальное чтиво".
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section class="container">
+        <div class="card" style="background: linear-gradient(135deg, #1a1a24 0%, #2a1010 100%); border-color: var(--accent-red);" data-aos="flip-up">
+            <h3><i class="fas fa-thumbs-down highlight-red"></i> Переоцененный фильм</h3>
+            <p>Я искала аномалию: много голосов (>5000), но низкий рейтинг.</p>
+            <div style="display: flex; gap: 20px; align-items: center; margin-top: 20px;">
+                <img src="https://m.media-amazon.com/images/M/MV5BYThjYzcyYzItNTVjNy00NDk0LTgwMWQtYjMwNmNlNWJhMzMyXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_.jpg" style="width: 100px; border-radius: 8px;">
+                <div>
+                    <h4 style="margin: 0;">Batman v Superman</h4>
+                    <p style="font-size: 0.8rem; color: #aaa;">Dawn of Justice</p>
+                    <div style="margin-top: 10px;">
+                        <span style="font-weight: bold; font-size: 1.5rem; color: var(--accent-red);">5.7</span> <span style="font-size: 0.8rem;">/ 10</span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: #ccc;">При <span style="color: white;">7189</span> голосах (хайп)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container">
+        <h2 class="section-header" style="text-align: left; margin-bottom: 30px;">💰 Бюджетная Яма</h2>
+        <div class="card" data-aos="zoom-in">
+            <p style="margin-bottom: 20px;">
+                Я использовала Matplotlib, чтобы построить гистограмму бюджетов.
+                Оказалось, что фильмов с бюджетом более $100 млн — единицы (длинный хвост справа).
+            </p>
+            <div class="chart-container">
+                <canvas id="budgetChart"></canvas>
+            </div>
+        </div>
+    </section>
+
+  <footer>
+        <div style="height: 1px; background: linear-gradient(90deg, transparent, var(--accent-neon), transparent); margin-bottom: 30px;"></div>
+        <h2 style="margin-bottom: 10px; font-size: 1.5rem;">Data Analysis Project</h2>
+        <p style="color: #aaa; font-size: 0.9rem; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+            Проект выполнен в рамках портфолио аналитика данных. <br>
+            Стек: <b>Python (Pandas, Seaborn, SQLAlchemy), SQL (MySQL).</b>
+        </p>
+        <p style="color: var(--accent-gold); margin-top: 15px; font-weight: bold; letter-spacing: 1px;">2024 | КЕЙС ПО АНАЛИЗУ КИНОИНДУСТРИИ</p>
+    </footer>
+    <script>
+        AOS.init({ duration: 800, once: true });
+        
+        // Анимация баров
+        setTimeout(() => {
+            document.querySelectorAll('.bar-fill').forEach(bar => {
+                bar.style.width = bar.style.width; 
+            });
+        }, 500);
+
+        // График Бюджетов
+        const ctx = document.getElementById('budgetChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['0-10m', '10-30m', '30-50m', '50-80m', '80-120m', '120m+'],
+                datasets: [{
+                    label: 'Количество фильмов',
+                    data: [2000, 1200, 450, 180, 70, 25], 
+                    backgroundColor: [
+                        'rgba(176, 38, 255, 0.2)',
+                        'rgba(176, 38, 255, 0.4)',
+                        'rgba(176, 38, 255, 0.6)',
+                        'rgba(176, 38, 255, 0.8)',
+                        'rgba(255, 215, 0, 0.8)', 
+                        'rgba(255, 42, 109, 0.9)'
+                    ],
+                    borderColor: 'rgba(176, 38, 255, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#aaa' } },
+                    x: { display: true, ticks: { color: '#aaa' } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
